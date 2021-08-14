@@ -11,6 +11,10 @@ import os
 import numpy as np
 import torch
 from torch.autograd import Variable
+#------modify PIL----------------------#
+from PIL import ImageFile 
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+#--------------------------------------#
 
 opt = TrainOptions().parse()
 iter_path = os.path.join(opt.checkpoints_dir, opt.name, 'iter.txt')
