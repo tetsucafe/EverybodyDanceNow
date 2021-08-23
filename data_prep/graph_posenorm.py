@@ -29,7 +29,7 @@ n = start
 SIZE = 512
 
 f_threshold = 0.2
-poselen = 69
+poselen = 75
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 ##### pose normalization from source ----> target. Then apply pose ----> target mapping to complete transfer.
@@ -48,7 +48,8 @@ parser.add_argument('--source_spread', nargs='+', type=int, help='range of frame
 #### Optional (have defaults)
 parser.add_argument('--target_median_frac', type=float, default=0.5, help='for target video: fraction of distance from maximum toe position to median to use to calculate minimum toe position. Try 0.5 or 0.7 for reasonable videos with normal back/forth motion.')
 parser.add_argument('--source_median_frac', type=float, default=0.5, help='for source video: fraction of distance from maximum toe position to median to use to calculate minimum toe position. Try 0.5 or 0.7 for reasonable videos with normal back/forth motion.')
-parser.add_argument('--filestart', type=str, default='frame', help='file start name, files should be named filestart%06d before extension')
+parser.add_argument('--filestart_source', type=str, default='frame', help='file start name (source), files should be named filestart%06d before extension')
+parser.add_argument('--filestart_target', type=str, default='frame', help='file start name (target), files should be named filestart%06d before extension')
 parser.add_argument('--calculate_scale_translation', action='store_true', help='use this flag to calcuate the translation and scale from scratch. Else, try to load them from a saved file.')
 parser.add_argument('--format', type=str, default='json', help='file format for keypoint files, only json and yaml are supported, [json|yaml]')
 
@@ -70,7 +71,7 @@ def get_keypoints_stats(mypath, myshape, spread, startname = "frame", stophere=2
 
 	while ok:
 		mynum = np.random.randint(low=spread[0], high=spread[1])
-		strmynum = '%06d' % mynum
+		strmynum = '%012d' % mynum
 		f_yaml = startname + strmynum + "_pose.yml"
 		f_json = startname + strmynum + "_keypoints.json"
 
@@ -125,7 +126,7 @@ def get_keypoints_stats(mypath, myshape, spread, startname = "frame", stophere=2
 
 
 def get_minmax_scales(tiptoe_to_height0, tiptoe_to_height1, translation, frac):
-	sorted_tiptoes0 = tiptoe_to_height0.keys().sort()
+	sorted_tiptoes0 = sorted(tiptoe_to_height0)
 
 	m_maxtoe, m_horizon = translation[0]
 	t_maxtoe, t_horizon = translation[1]
@@ -260,10 +261,10 @@ def transform_interp(mypath, scaleyy, translation, myshape, savedir, spread_m, s
 
 	while n <= end:
 		print(n)
-		framesmadestr = '%06d' % numberframesmade
-		string_num = '%06d' % n
+		framesmadestr = '%012d' % numberframesmade
+		string_num = '%012d' % n
 		key_name = mypath + "/" + startname + string_num
-		framenum = '%06d' % n
+		framenum = '%012d' % n
 		frame_name = framesdir + '/' + startname + string_num + ".png"
 
 		posepts = []
@@ -408,7 +409,8 @@ if (len(spread_m) != 2) or (len(spread_t) != 2):
 	print("spread must ")
 	sys.exit(0)
 
-startname= opt.filestart
+startname= opt.filestart_source
+startname2= opt.filestart_target
 
 numkeypoints = 8
 
@@ -435,7 +437,7 @@ if calculate_scale_and_translation:
 	#maxheight, mintoe, maxtoe, avemintoe, maxmintoe
 	t_height, t_mintoe, t_maxtoe, t_avemintoe, t_maxmintoe, t_median, t_tiptoes, t_tiptoe_to_height = get_keypoints_stats(source_keypoints, shape2, spread_t, startname=startname)
 
-	m_height, m_mintoe, m_maxtoe, m_avemintoe, m_maxmintoe, m_median, m_tiptoes, m_tiptoe_to_height = get_keypoints_stats(target_keypoints, shape1, spread_m, startname=startname, stophere=5000)
+	m_height, m_mintoe, m_maxtoe, m_avemintoe, m_maxmintoe, m_median, m_tiptoes, m_tiptoe_to_height = get_keypoints_stats(target_keypoints, shape1, spread_m, startname=startname2, stophere=5000)
 
 	m_tiptoefrommid = m_maxtoe - m_median
 	t_tiptoefrommid = t_maxtoe - t_median
